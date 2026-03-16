@@ -1,15 +1,31 @@
 import { useParams, Link } from 'react-router-dom'
-import { ChevronLeft, Scale, Download, MessageCircle, FileText, AlertCircle } from 'lucide-react'
+import {
+  ChevronLeft,
+  Scale,
+  Download,
+  MessageCircle,
+  FileText,
+  AlertCircle,
+  History,
+} from 'lucide-react'
 import { MOCK_PROCESSES } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Timeline } from '@/components/Timeline'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 export default function ProcessDetail() {
   const { id } = useParams<{ id: string }>()
 
-  // Clean the ID for lookup if needed, but we used encodeURIComponent
   const decodedId = decodeURIComponent(id || '')
   const processData = MOCK_PROCESSES[decodedId]
 
@@ -95,18 +111,94 @@ export default function ProcessDetail() {
 
       <div className="container mx-auto px-4 -mt-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Timeline Column */}
+          {/* Main Content Column */}
           <div className="lg:col-span-2 space-y-8">
-            <Card className="border-0 shadow-lg">
-              <CardHeader className="border-b bg-muted/30">
-                <CardTitle className="font-serif text-2xl text-primary">
-                  Histórico do Processo
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 sm:p-10">
-                <Timeline events={processData.events} />
-              </CardContent>
-            </Card>
+            <Tabs
+              defaultValue="timeline"
+              className="w-full animate-slide-up"
+              style={{ animationDelay: '100ms' }}
+            >
+              <TabsList className="grid w-full grid-cols-2 bg-muted/80 p-1 mb-6 rounded-xl h-14 shadow-sm">
+                <TabsTrigger
+                  value="timeline"
+                  className="rounded-lg text-base h-10 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+                >
+                  <History className="w-4 h-4 mr-2" />
+                  Histórico
+                </TabsTrigger>
+                <TabsTrigger
+                  value="documents"
+                  className="rounded-lg text-base h-10 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Documentos
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="timeline" className="mt-0 outline-none">
+                <Card className="border-0 shadow-lg">
+                  <CardHeader className="border-b bg-muted/30 pb-5">
+                    <CardTitle className="font-serif text-2xl text-primary">
+                      Movimentações do Processo
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 sm:p-10">
+                    <Timeline events={processData.events} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="documents" className="mt-0 outline-none">
+                <Card className="border-0 shadow-lg overflow-hidden">
+                  <CardHeader className="border-b bg-muted/30 pb-5">
+                    <CardTitle className="font-serif text-2xl text-primary">
+                      Repositório de Documentos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader className="bg-muted/10">
+                        <TableRow>
+                          <TableHead className="w-[300px] pl-6 h-12">Nome do Documento</TableHead>
+                          <TableHead className="h-12">Data de Inserção</TableHead>
+                          <TableHead className="text-right pr-6 h-12">Ação</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {[
+                          { name: 'Petição Inicial.pdf', date: processData.startDate },
+                          { name: 'Ata de Audiência.pdf', date: '10/11/2023' },
+                          { name: 'Sentença.pdf', date: '15/12/2023' },
+                          { name: 'Recurso Ordinário.pdf', date: '20/01/2024' },
+                        ].map((doc, i) => (
+                          <TableRow key={i} className="hover:bg-muted/30 h-16 transition-colors">
+                            <TableCell className="font-medium pl-6">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+                                  <FileText className="w-4 h-4" />
+                                </div>
+                                <span>{doc.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">{doc.date}</TableCell>
+                            <TableCell className="text-right pr-6">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 hover:bg-primary hover:text-white transition-colors"
+                              >
+                                <Download className="w-4 h-4" />{' '}
+                                <span className="hidden sm:inline">Baixar</span>
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Sidebar Column */}
@@ -145,43 +237,29 @@ export default function ProcessDetail() {
               </CardContent>
             </Card>
 
-            {/* Documents Card */}
+            {/* Quick Contact Info */}
             <Card
               className="border-0 shadow-lg animate-slide-up"
               style={{ animationDelay: '300ms' }}
             >
-              <CardHeader className="pb-4">
-                <CardTitle className="font-serif text-lg text-primary flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-secondary" /> Documentos Públicos
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[
-                  { name: 'Petição Inicial.pdf', date: processData.startDate },
-                  { name: 'Ata de Audiência.pdf', date: '10/11/2023' },
-                ].map((doc, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/30 hover:bg-muted transition-colors group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="w-8 h-8 rounded bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-                        <FileText className="w-4 h-4" />
-                      </div>
-                      <div className="truncate">
-                        <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
-                        <p className="text-xs text-muted-foreground">{doc.date}</p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 text-muted-foreground group-hover:text-primary"
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-secondary/10 text-secondary flex items-center justify-center">
+                    <AlertCircle className="w-5 h-5" />
                   </div>
-                ))}
+                  <div>
+                    <h4 className="font-semibold text-primary">Dúvidas?</h4>
+                    <p className="text-sm text-muted-foreground">Estamos aqui para ajudar.</p>
+                  </div>
+                </div>
+                <Link to="/contato" className="block w-full">
+                  <Button
+                    variant="outline"
+                    className="w-full hover:bg-primary hover:text-white transition-colors"
+                  >
+                    Entrar em contato
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>

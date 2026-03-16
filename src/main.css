@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    --background: 210 33% 98%; /* Soft White/Grey #F8FAFC */
-    --foreground: 218 47% 19%; /* Navy Blue text #1A2B48 */
+    --background: 210 33% 98%;
+    --foreground: 218 47% 19%;
 
     --card: 0 0% 100%;
     --card-foreground: 218 47% 19%;
@@ -15,7 +15,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 218 47% 19%;
 
-    --primary: 218 47% 19%; /* Deep Navy Blue */
+    /* Oliveira Naval Colors */
+    --primary: 218 47% 19%; /* Deep Navy Blue #1A2B48 */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 40 48% 56%; /* Brushed Gold #C5A059 */
@@ -24,7 +25,7 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 40 48% 56%; /* Brushed Gold */
+    --accent: 40 48% 56%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -32,7 +33,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 40 48% 56%; /* Gold ring for focus */
+    --ring: 40 48% 56%;
 
     --radius: 0.5rem;
   }
