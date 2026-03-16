@@ -13,6 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Badge } from '@/components/ui/badge'
 import { ProcessDetails } from '@/lib/mock-data'
 import useDataStore from '@/stores/useDataStore'
 import { useToast } from '@/hooks/use-toast'
@@ -32,6 +34,7 @@ export function ManageProcessSheet({
   const [status, setStatus] = useState<ProcessDetails['status']>(process?.status || 'Ativo')
   const [movTitle, setMovTitle] = useState('')
   const [movDesc, setMovDesc] = useState('')
+  const [requiresSignature, setRequiresSignature] = useState(false)
 
   if (!process) return null
 
@@ -61,9 +64,14 @@ export function ManageProcessSheet({
       title: file.name,
       description: 'Documento inserido pelo administrador.',
       type: 'documento',
+      requiresSignature,
+      signatureStatus: requiresSignature ? 'pending' : undefined,
     })
+    setRequiresSignature(false)
     toast({ title: 'Documento anexado com sucesso' })
   }
+
+  const docs = process.events.filter((e) => e.type === 'documento')
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -126,19 +134,62 @@ export function ManageProcessSheet({
           </TabsContent>
 
           <TabsContent value="docs" className="space-y-4 mt-4">
-            <div className="border-2 border-dashed rounded-lg p-8 text-center bg-slate-50">
+            <div className="border-2 border-dashed rounded-lg p-6 text-center bg-slate-50">
               <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm font-medium text-primary mb-1">Fazer Upload de Arquivo</p>
-              <p className="text-xs text-muted-foreground mb-4">PDF, DOCX, JPG (Max 10MB)</p>
+              <p className="text-sm font-medium text-primary mb-1">Upload de Arquivo</p>
+              <div className="flex items-center justify-center space-x-2 mt-4 mb-4">
+                <Switch
+                  id="req-sig"
+                  checked={requiresSignature}
+                  onCheckedChange={setRequiresSignature}
+                />
+                <Label htmlFor="req-sig">Exige assinatura do cliente</Label>
+              </div>
               <div className="relative">
                 <Button variant="outline" className="w-full">
-                  Selecionar Arquivo
+                  Selecionar e Enviar
                 </Button>
                 <input
                   type="file"
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   onChange={handleFileUpload}
                 />
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h4 className="font-medium text-sm text-primary mb-3">Documentos Anexados</h4>
+              <div className="space-y-2">
+                {docs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    Nenhum documento.
+                  </p>
+                ) : (
+                  docs.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between p-3 border rounded-lg bg-white"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium truncate max-w-[150px]">
+                          {doc.title}
+                        </span>
+                      </div>
+                      {doc.requiresSignature && (
+                        <Badge
+                          className={
+                            doc.signatureStatus === 'signed'
+                              ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0 shadow-none'
+                              : 'bg-amber-100 text-amber-700 hover:bg-amber-100 border-0 shadow-none'
+                          }
+                        >
+                          {doc.signatureStatus === 'signed' ? 'Assinado' : 'Pendente'}
+                        </Badge>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </TabsContent>

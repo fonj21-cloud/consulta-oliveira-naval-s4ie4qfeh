@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Briefcase, Settings, LogOut, MessageCircle } from 'lucide-react'
+import { LayoutDashboard, Users, Briefcase, LogOut, MessageCircle, BarChart } from 'lucide-react'
 import {
   SidebarProvider,
   Sidebar,
@@ -22,6 +22,7 @@ const menuItems = [
   { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
   { title: 'Clientes', url: '/admin/clients', icon: Users },
   { title: 'Processos', url: '/admin/processes', icon: Briefcase },
+  { title: 'Relatórios (BI)', url: '/admin/analytics', icon: BarChart },
   { title: 'Integração WhatsApp', url: '/admin/settings', icon: MessageCircle },
 ]
 

@@ -23,6 +23,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminClients from './pages/admin/AdminClients'
 import AdminProcesses from './pages/admin/AdminProcesses'
 import AdminSettings from './pages/admin/AdminSettings'
+import AdminAnalytics from './pages/admin/AdminAnalytics'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -56,6 +57,7 @@ const App = () => (
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/clients" element={<AdminClients />} />
                 <Route path="/admin/processes" element={<AdminProcesses />} />
+                <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
               </Route>
             </Route>

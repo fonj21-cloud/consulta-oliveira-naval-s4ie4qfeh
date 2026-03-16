@@ -11,6 +11,9 @@ export interface ProcessEvent {
   title: string
   description: string
   type: 'movimentacao' | 'documento' | 'audiencia' | 'conclusao'
+  requiresSignature?: boolean
+  signatureStatus?: 'pending' | 'signed'
+  signedAt?: string
 }
 
 export interface Lawyer {
@@ -32,6 +35,8 @@ export interface ProcessDetails {
   value: string
   lawyer: Lawyer
   events: ProcessEvent[]
+  lastSyncDate?: string
+  syncStatus?: 'Up to date' | 'Syncing' | 'Error'
 }
 
 export const INITIAL_CLIENTS: Client[] = [
@@ -50,6 +55,8 @@ export const INITIAL_PROCESSES: ProcessDetails[] = [
     defendant: 'Tech Solutions SA',
     startDate: '15/03/2023',
     value: 'R$ 45.000,00',
+    lastSyncDate: 'Hoje, 09:30',
+    syncStatus: 'Up to date',
     lawyer: {
       name: 'Dr. Roberto Naval',
       oab: 'OAB/RJ 123456',
@@ -57,6 +64,15 @@ export const INITIAL_PROCESSES: ProcessDetails[] = [
       avatar: 'https://img.usecurling.com/ppl/medium?gender=male&seed=1',
     },
     events: [
+      {
+        id: 'e3',
+        date: '20/10/2023',
+        title: 'Procuração Ad Judicia.pdf',
+        description: 'Documento requer sua assinatura digital para representação legal.',
+        type: 'documento',
+        requiresSignature: true,
+        signatureStatus: 'pending',
+      },
       {
         id: 'e1',
         date: '10/11/2023',
@@ -83,6 +99,8 @@ export const INITIAL_PROCESSES: ProcessDetails[] = [
     defendant: 'Supermercados Guanabara',
     startDate: '10/01/2022',
     value: 'R$ 12.500,00',
+    lastSyncDate: '15/09/2023',
+    syncStatus: 'Up to date',
     lawyer: {
       name: 'Dra. Ana Oliveira',
       oab: 'OAB/RJ 654321',

@@ -7,6 +7,7 @@ import {
   FileText,
   AlertCircle,
   History,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,10 +23,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import useDataStore from '@/stores/useDataStore'
+import { cn } from '@/lib/utils'
 
 export default function ProcessDetail() {
   const { id } = useParams<{ id: string }>()
-  const { processes } = useDataStore()
+  const { processes, syncProcessWithTRT } = useDataStore()
 
   const decodedId = decodeURIComponent(id || '')
   const processData = processes.find((p) => p.number === decodedId)
@@ -49,6 +51,10 @@ export default function ProcessDetail() {
         </Link>
       </div>
     )
+  }
+
+  const handleSync = () => {
+    syncProcessWithTRT(processData.id)
   }
 
   const statusColor = {
@@ -81,13 +87,34 @@ export default function ProcessDetail() {
               </div>
               <p className="text-primary-foreground/80 text-lg mb-6">{processData.court}</p>
 
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap items-center gap-4">
                 <Badge className={`${statusColor} border-0 px-3 py-1 text-sm font-medium`}>
                   {processData.status}
                 </Badge>
                 <div className="bg-white/10 rounded-full px-4 py-1.5 text-sm font-medium">
                   Início: {processData.startDate}
                 </div>
+                <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm font-medium">
+                  <RefreshCw
+                    className={cn(
+                      'w-3.5 h-3.5',
+                      processData.syncStatus === 'Syncing' && 'animate-spin',
+                    )}
+                  />
+                  TRT:{' '}
+                  {processData.syncStatus === 'Syncing'
+                    ? 'Sincronizando...'
+                    : processData.lastSyncDate || 'Não Sincronizado'}
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 rounded-full px-4"
+                  onClick={handleSync}
+                  disabled={processData.syncStatus === 'Syncing'}
+                >
+                  Forçar Sincronização
+                </Button>
               </div>
             </div>
 
@@ -137,7 +164,7 @@ export default function ProcessDetail() {
 
               <TabsContent value="timeline" className="mt-0 outline-none">
                 <Card className="border-0 shadow-lg">
-                  <CardHeader className="border-b bg-muted/30 pb-5">
+                  <CardHeader className="border-b bg-muted/30 pb-5 flex flex-row items-center justify-between">
                     <CardTitle className="font-serif text-2xl text-primary">
                       Movimentações do Processo
                     </CardTitle>
@@ -160,7 +187,7 @@ export default function ProcessDetail() {
                       <TableHeader className="bg-muted/10">
                         <TableRow>
                           <TableHead className="w-[300px] pl-6 h-12">Nome do Documento</TableHead>
-                          <TableHead className="h-12">Data de Inserção</TableHead>
+                          <TableHead className="h-12">Data</TableHead>
                           <TableHead className="text-right pr-6 h-12">Ação</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -190,6 +217,18 @@ export default function ProcessDetail() {
                               </TableCell>
                               <TableCell className="text-muted-foreground">{doc.date}</TableCell>
                               <TableCell className="text-right pr-6">
+                                {doc.requiresSignature && (
+                                  <Badge
+                                    className={cn(
+                                      'mr-3 border-0',
+                                      doc.signatureStatus === 'signed'
+                                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                        : 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+                                    )}
+                                  >
+                                    {doc.signatureStatus === 'signed' ? 'Assinado' : 'Pendente'}
+                                  </Badge>
+                                )}
                                 <Button
                                   variant="outline"
                                   size="sm"

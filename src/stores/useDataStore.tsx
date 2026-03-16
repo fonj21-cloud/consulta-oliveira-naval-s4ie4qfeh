@@ -17,6 +17,8 @@ interface DataContextType {
   addProcess: (p: ProcessDetails) => void
   updateProcessStatus: (id: string, status: ProcessDetails['status']) => void
   addProcessEvent: (processId: string, event: Omit<ProcessEvent, 'id'>) => void
+  syncProcessWithTRT: (id: string) => void
+  signDocument: (processId: string, eventId: string) => void
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -30,7 +32,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const triggerWhatsApp = (clientName: string, type: string) => {
     if (whatsappConnected) {
       toast({
-        title: 'Mensagem Automática (WhatsApp API)',
+        title: 'Mensagem Automática (WhatsApp/E-mail API)',
         description: `Notificação de "${type}" enviada com sucesso para ${clientName}.`,
         className: 'bg-[#25D366] text-white border-none',
       })
@@ -75,6 +77,65 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     )
   }
 
+  const syncProcessWithTRT = (id: string) => {
+    setProcesses((prev) =>
+      prev.map((p) => {
+        if (p.id === id) return { ...p, syncStatus: 'Syncing' }
+        return p
+      }),
+    )
+
+    setTimeout(() => {
+      setProcesses((prev) =>
+        prev.map((p) => {
+          if (p.id === id) {
+            const client = clients.find((c) => c.id === p.clientId)
+            if (client) triggerWhatsApp(client.name, `Atualização TRT`)
+
+            const newEvent: ProcessEvent = {
+              id: Math.random().toString(),
+              date: new Date().toLocaleDateString('pt-BR'),
+              title: 'Movimentação via PJe TRT',
+              description: 'Andamento capturado automaticamente pelo serviço de integração.',
+              type: 'movimentacao',
+            }
+
+            return {
+              ...p,
+              syncStatus: 'Up to date',
+              lastSyncDate: new Date().toLocaleString('pt-BR'),
+              events: [newEvent, ...p.events],
+            }
+          }
+          return p
+        }),
+      )
+    }, 1500)
+  }
+
+  const signDocument = (processId: string, eventId: string) => {
+    setProcesses((prev) =>
+      prev.map((p) => {
+        if (p.id === processId) {
+          return {
+            ...p,
+            events: p.events.map((e) => {
+              if (e.id === eventId) {
+                return {
+                  ...e,
+                  signatureStatus: 'signed',
+                  signedAt: new Date().toLocaleString('pt-BR'),
+                }
+              }
+              return e
+            }),
+          }
+        }
+        return p
+      }),
+    )
+  }
+
   return (
     <DataContext.Provider
       value={{
@@ -86,6 +147,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         addProcess,
         updateProcessStatus,
         addProcessEvent,
+        syncProcessWithTRT,
+        signDocument,
       }}
     >
       {children}
