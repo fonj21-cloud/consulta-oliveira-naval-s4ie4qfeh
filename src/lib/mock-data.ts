@@ -12,8 +12,11 @@ export interface ProcessEvent {
   description: string
   type: 'movimentacao' | 'documento' | 'audiencia' | 'conclusao'
   requiresSignature?: boolean
-  signatureStatus?: 'pending' | 'signed'
+  signatureStatus?: 'pending' | 'signed' | 'canceled'
   signedAt?: string
+  zapsignDocumentToken?: string
+  signatureUrl?: string
+  signedFileUrl?: string
 }
 
 export interface Lawyer {
@@ -106,6 +109,8 @@ export const INITIAL_PROCESSES: ProcessDetails[] = [
         type: 'documento',
         requiresSignature: true,
         signatureStatus: 'pending',
+        zapsignDocumentToken: 'mock-1234',
+        signatureUrl: 'https://sandbox.zapsign.com.br/assinar/mock-1234',
       },
       {
         id: 'e1',

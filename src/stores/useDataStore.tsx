@@ -13,6 +13,7 @@ import {
   INITIAL_WIKI,
 } from '@/lib/mock-data'
 import { useToast } from '@/hooks/use-toast'
+import { createZapSignDocument, getZapSignDocument } from '@/services/zapsign'
 
 interface DataContextType {
   clients: Client[]
@@ -30,6 +31,13 @@ interface DataContextType {
   signDocument: (processId: string, eventId: string) => void
   addFinancialEntry: (f: Omit<FinancialEntry, 'id'>) => void
   addWikiEntry: (w: Omit<WikiEntry, 'id' | 'updatedAt'>) => void
+  sendDocumentForSignature: (
+    processId: string,
+    eventId: string,
+    name: string,
+    email: string,
+  ) => Promise<void>
+  checkZapSignStatus: (processId: string, eventId: string, token: string) => Promise<boolean>
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -148,6 +156,69 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     ])
   }
 
+  const sendDocumentForSignature = async (
+    processId: string,
+    eventId: string,
+    signerName: string,
+    signerEmail: string,
+  ) => {
+    const p = processes.find((p) => p.id === processId)
+    if (!p) return
+    const ev = p.events.find((e) => e.id === eventId)
+    if (!ev) return
+
+    const result = await createZapSignDocument(ev.title, signerName, signerEmail)
+
+    setProcesses((prev) =>
+      prev.map((process) =>
+        process.id === processId
+          ? {
+              ...process,
+              events: process.events.map((e) =>
+                e.id === eventId
+                  ? {
+                      ...e,
+                      requiresSignature: true,
+                      signatureStatus: 'pending',
+                      zapsignDocumentToken: result.token,
+                      signatureUrl: result.signers[0].sign_url,
+                    }
+                  : e,
+              ),
+            }
+          : process,
+      ),
+    )
+  }
+
+  const checkZapSignStatus = async (processId: string, eventId: string, token: string) => {
+    const result = await getZapSignDocument(token)
+
+    if (result.status === 'signed' || result.signers?.every((s: any) => s.status === 'signed')) {
+      setProcesses((prev) =>
+        prev.map((process) =>
+          process.id === processId
+            ? {
+                ...process,
+                events: process.events.map((e) =>
+                  e.id === eventId
+                    ? {
+                        ...e,
+                        signatureStatus: 'signed',
+                        signedFileUrl: result.signed_file || e.signedFileUrl,
+                        signedAt: new Date().toLocaleString('pt-BR'),
+                      }
+                    : e,
+                ),
+              }
+            : process,
+        ),
+      )
+      return true
+    }
+    return false
+  }
+
   return (
     <DataContext.Provider
       value={{
@@ -166,6 +237,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         signDocument,
         addFinancialEntry,
         addWikiEntry,
+        sendDocumentForSignature,
+        checkZapSignStatus,
       }}
     >
       {children}

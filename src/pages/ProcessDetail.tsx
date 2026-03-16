@@ -223,20 +223,45 @@ export default function ProcessDetail() {
                                       'mr-3 border-0',
                                       doc.signatureStatus === 'signed'
                                         ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                        : 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+                                        : doc.signatureStatus === 'canceled'
+                                          ? 'bg-red-100 text-red-700 hover:bg-red-100'
+                                          : 'bg-amber-100 text-amber-700 hover:bg-amber-100',
                                     )}
                                   >
-                                    {doc.signatureStatus === 'signed' ? 'Assinado' : 'Pendente'}
+                                    {doc.signatureStatus === 'signed'
+                                      ? 'Assinado'
+                                      : doc.signatureStatus === 'canceled'
+                                        ? 'Cancelado'
+                                        : 'Pendente ZapSign'}
                                   </Badge>
                                 )}
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="gap-2 hover:bg-primary hover:text-white transition-colors"
-                                >
-                                  <Download className="w-4 h-4" />{' '}
-                                  <span className="hidden sm:inline">Baixar</span>
-                                </Button>
+                                {doc.signatureStatus === 'signed' && doc.signedFileUrl ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    asChild
+                                    className="gap-2 hover:bg-primary hover:text-white transition-colors"
+                                  >
+                                    <a
+                                      href={doc.signedFileUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      download
+                                    >
+                                      <Download className="w-4 h-4" />{' '}
+                                      <span className="hidden sm:inline">Baixar Assinado</span>
+                                    </a>
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2 hover:bg-primary hover:text-white transition-colors"
+                                  >
+                                    <Download className="w-4 h-4" />{' '}
+                                    <span className="hidden sm:inline">Baixar</span>
+                                  </Button>
+                                )}
                               </TableCell>
                             </TableRow>
                           ))

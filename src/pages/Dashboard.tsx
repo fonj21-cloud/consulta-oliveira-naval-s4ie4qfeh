@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom'
 import {
   FileText,
   Scale,
-  Clock,
+  DollarSign,
   CheckCircle2,
   AlertCircle,
   PenTool,
-  DollarSign,
+  RefreshCw,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -32,15 +32,17 @@ import { useAuth } from '@/contexts/AuthContext'
 import useDataStore from '@/stores/useDataStore'
 import { useToast } from '@/hooks/use-toast'
 import { ProcessEvent } from '@/lib/mock-data'
+import { cn } from '@/lib/utils'
 
 type PendingDoc = ProcessEvent & { processNumber: string; processId: string }
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const { processes, financialEntries, signDocument } = useDataStore()
+  const { processes, financialEntries, signDocument, checkZapSignStatus } = useDataStore()
   const { toast } = useToast()
 
   const [signDoc, setSignDoc] = useState<PendingDoc | null>(null)
+  const [isChecking, setIsChecking] = useState<string | null>(null)
 
   const userProcesses = processes.filter((p) => p.clientId === user?.id)
   const userFinance = financialEntries.filter((f) =>
@@ -63,6 +65,26 @@ export default function Dashboard() {
         description: 'Sua assinatura digital foi registrada.',
       })
       setSignDoc(null)
+    }
+  }
+
+  const handleCheckStatus = async (doc: PendingDoc) => {
+    if (!doc.zapsignDocumentToken) return
+    setIsChecking(doc.id)
+    try {
+      const signed = await checkZapSignStatus(doc.processId, doc.id, doc.zapsignDocumentToken)
+      if (signed) {
+        toast({ title: 'Assinatura confirmada com sucesso!' })
+      } else {
+        toast({
+          title: 'Ainda aguardando assinatura.',
+          description: 'Tente novamente após assinar no ZapSign.',
+        })
+      }
+    } catch (e) {
+      toast({ title: 'Erro ao verificar status', variant: 'destructive' })
+    } finally {
+      setIsChecking(null)
     }
   }
 
@@ -91,12 +113,38 @@ export default function Dashboard() {
                       <p className="font-semibold text-primary">{doc.title}</p>
                       <p className="text-sm text-muted-foreground">Processo: {doc.processNumber}</p>
                     </div>
-                    <Button
-                      onClick={() => setSignDoc(doc)}
-                      className="bg-amber-500 hover:bg-amber-600 text-white shrink-0"
-                    >
-                      <PenTool className="w-4 h-4 mr-2" /> Assinar Documento
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {doc.signatureUrl ? (
+                        <Button
+                          asChild
+                          className="bg-amber-500 hover:bg-amber-600 text-white shrink-0"
+                        >
+                          <a href={doc.signatureUrl} target="_blank" rel="noreferrer">
+                            <PenTool className="w-4 h-4 mr-2" /> Assinar no ZapSign
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => setSignDoc(doc)}
+                          className="bg-amber-500 hover:bg-amber-600 text-white shrink-0"
+                        >
+                          <PenTool className="w-4 h-4 mr-2" /> Assinar Documento
+                        </Button>
+                      )}
+
+                      {doc.zapsignDocumentToken && (
+                        <Button
+                          variant="outline"
+                          onClick={() => handleCheckStatus(doc)}
+                          title="Verificar Status"
+                          disabled={isChecking === doc.id}
+                        >
+                          <RefreshCw
+                            className={cn('w-4 h-4', isChecking === doc.id && 'animate-spin')}
+                          />
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -247,6 +295,7 @@ export default function Dashboard() {
         </Tabs>
       </div>
 
+      {/* Legacy signing dialog for docs without zapsign token */}
       <Dialog open={!!signDoc} onOpenChange={(o) => !o && setSignDoc(null)}>
         <DialogContent>
           <DialogHeader>
