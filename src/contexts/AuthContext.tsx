@@ -5,6 +5,7 @@ export interface User {
   name: string
   email: string
   phone: string
+  role: 'client' | 'admin'
   notifications: {
     email: boolean
     whatsapp: boolean
@@ -13,7 +14,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null
-  login: (email: string, name?: string) => void
+  login: (email: string, name?: string, role?: 'client' | 'admin', id?: string) => void
   logout: () => void
   updateProfile: (data: Partial<User>) => void
 }
@@ -23,12 +24,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
 
-  const login = (email: string, name?: string) => {
+  const login = (
+    email: string,
+    name?: string,
+    role: 'client' | 'admin' = 'client',
+    id?: string,
+  ) => {
     setUser({
-      id: '1',
+      id: id || (role === 'admin' ? 'admin1' : '1'),
       name: name || 'João Carlos Silva',
       email,
       phone: '(21) 99999-9999',
+      role,
       notifications: {
         email: true,
         whatsapp: true,

@@ -1,3 +1,10 @@
+export interface Client {
+  id: string
+  name: string
+  email: string
+  phone: string
+}
+
 export interface ProcessEvent {
   id: string
   date: string
@@ -15,6 +22,7 @@ export interface Lawyer {
 
 export interface ProcessDetails {
   id: string
+  clientId: string
   number: string
   status: 'Ativo' | 'Concluído' | 'Aguardando Prazo'
   court: string
@@ -26,9 +34,15 @@ export interface ProcessDetails {
   events: ProcessEvent[]
 }
 
-export const MOCK_PROCESSES: Record<string, ProcessDetails> = {
-  '0010234-56.2023.5.01.0001': {
-    id: '1',
+export const INITIAL_CLIENTS: Client[] = [
+  { id: '1', name: 'João Carlos Silva', email: 'joao@email.com', phone: '(21) 99999-9999' },
+  { id: '2', name: 'Maria Eduarda Costa', email: 'maria@email.com', phone: '(21) 98888-8888' },
+]
+
+export const INITIAL_PROCESSES: ProcessDetails[] = [
+  {
+    id: 'p1',
+    clientId: '1',
     number: '0010234-56.2023.5.01.0001',
     status: 'Ativo',
     court: '1ª Vara do Trabalho do Rio de Janeiro',
@@ -47,29 +61,21 @@ export const MOCK_PROCESSES: Record<string, ProcessDetails> = {
         id: 'e1',
         date: '10/11/2023',
         title: 'Audiência de Conciliação Designada',
-        description:
-          'Foi marcada a data para a primeira tentativa de acordo entre as partes. Comparecimento obrigatório.',
+        description: 'Foi marcada a data para a primeira tentativa de acordo entre as partes.',
         type: 'audiencia',
       },
       {
         id: 'e2',
-        date: '05/10/2023',
-        title: 'Petição Inicial Recebida',
-        description:
-          'O juiz aceitou nossos argumentos iniciais e notificou a empresa para se defender.',
-        type: 'movimentacao',
-      },
-      {
-        id: 'e3',
         date: '15/03/2023',
-        title: 'Processo Distribuído',
-        description: 'Ação trabalhista protocolada com sucesso no sistema PJe do TRT1.',
+        title: 'Petição Inicial.pdf',
+        description: 'Petição inicial anexada ao processo.',
         type: 'documento',
       },
     ],
   },
-  '0001234-12.2022.5.01.0045': {
-    id: '2',
+  {
+    id: 'p2',
+    clientId: '2',
     number: '0001234-12.2022.5.01.0045',
     status: 'Concluído',
     court: '45ª Vara do Trabalho do Rio de Janeiro',
@@ -91,13 +97,6 @@ export const MOCK_PROCESSES: Record<string, ProcessDetails> = {
         description: 'O valor da condenação foi liberado e transferido para a conta informada.',
         type: 'conclusao',
       },
-      {
-        id: 'e5',
-        date: '15/07/2023',
-        title: 'Acordo Homologado',
-        description: 'O juiz validou o acordo feito entre as partes. Aguardando pagamento.',
-        type: 'movimentacao',
-      },
     ],
   },
-}
+]

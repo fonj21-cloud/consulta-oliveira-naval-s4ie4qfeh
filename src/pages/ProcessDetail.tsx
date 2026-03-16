@@ -8,7 +8,6 @@ import {
   AlertCircle,
   History,
 } from 'lucide-react'
-import { MOCK_PROCESSES } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -22,12 +21,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import useDataStore from '@/stores/useDataStore'
 
 export default function ProcessDetail() {
   const { id } = useParams<{ id: string }>()
+  const { processes } = useDataStore()
 
   const decodedId = decodeURIComponent(id || '')
-  const processData = MOCK_PROCESSES[decodedId]
+  const processData = processes.find((p) => p.number === decodedId)
 
   if (!processData) {
     return (
@@ -55,6 +56,8 @@ export default function ProcessDetail() {
     Concluído: 'bg-green-100 text-green-700 hover:bg-green-100',
     'Aguardando Prazo': 'bg-amber-100 text-amber-700 hover:bg-amber-100',
   }[processData.status]
+
+  const docs = processData.events.filter((e) => e.type === 'documento')
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -111,7 +114,6 @@ export default function ProcessDetail() {
 
       <div className="container mx-auto px-4 -mt-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content Column */}
           <div className="lg:col-span-2 space-y-8">
             <Tabs
               defaultValue="timeline"
@@ -123,15 +125,13 @@ export default function ProcessDetail() {
                   value="timeline"
                   className="rounded-lg text-base h-10 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
                 >
-                  <History className="w-4 h-4 mr-2" />
-                  Histórico
+                  <History className="w-4 h-4 mr-2" /> Histórico
                 </TabsTrigger>
                 <TabsTrigger
                   value="documents"
                   className="rounded-lg text-base h-10 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
                 >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Documentos
+                  <FileText className="w-4 h-4 mr-2" /> Documentos
                 </TabsTrigger>
               </TabsList>
 
@@ -165,34 +165,43 @@ export default function ProcessDetail() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {[
-                          { name: 'Petição Inicial.pdf', date: processData.startDate },
-                          { name: 'Ata de Audiência.pdf', date: '10/11/2023' },
-                          { name: 'Sentença.pdf', date: '15/12/2023' },
-                          { name: 'Recurso Ordinário.pdf', date: '20/01/2024' },
-                        ].map((doc, i) => (
-                          <TableRow key={i} className="hover:bg-muted/30 h-16 transition-colors">
-                            <TableCell className="font-medium pl-6">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
-                                  <FileText className="w-4 h-4" />
-                                </div>
-                                <span>{doc.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">{doc.date}</TableCell>
-                            <TableCell className="text-right pr-6">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2 hover:bg-primary hover:text-white transition-colors"
-                              >
-                                <Download className="w-4 h-4" />{' '}
-                                <span className="hidden sm:inline">Baixar</span>
-                              </Button>
+                        {docs.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={3}
+                              className="text-center py-6 text-muted-foreground"
+                            >
+                              Nenhum documento anexado.
                             </TableCell>
                           </TableRow>
-                        ))}
+                        ) : (
+                          docs.map((doc) => (
+                            <TableRow
+                              key={doc.id}
+                              className="hover:bg-muted/30 h-16 transition-colors"
+                            >
+                              <TableCell className="font-medium pl-6">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+                                    <FileText className="w-4 h-4" />
+                                  </div>
+                                  <span>{doc.title}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">{doc.date}</TableCell>
+                              <TableCell className="text-right pr-6">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-2 hover:bg-primary hover:text-white transition-colors"
+                                >
+                                  <Download className="w-4 h-4" />{' '}
+                                  <span className="hidden sm:inline">Baixar</span>
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
                       </TableBody>
                     </Table>
                   </CardContent>
@@ -201,9 +210,7 @@ export default function ProcessDetail() {
             </Tabs>
           </div>
 
-          {/* Sidebar Column */}
           <div className="space-y-6">
-            {/* Lawyer Card */}
             <Card
               className="border-0 shadow-lg overflow-hidden animate-slide-up"
               style={{ animationDelay: '200ms' }}
@@ -230,36 +237,9 @@ export default function ProcessDetail() {
                     className="w-full mt-6 bg-[#25D366] hover:bg-[#20BD5A] text-white gap-2"
                     size="lg"
                   >
-                    <MessageCircle className="w-5 h-5" />
-                    Falar no WhatsApp
+                    <MessageCircle className="w-5 h-5" /> Falar no WhatsApp
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Contact Info */}
-            <Card
-              className="border-0 shadow-lg animate-slide-up"
-              style={{ animationDelay: '300ms' }}
-            >
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-secondary/10 text-secondary flex items-center justify-center">
-                    <AlertCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-primary">Dúvidas?</h4>
-                    <p className="text-sm text-muted-foreground">Estamos aqui para ajudar.</p>
-                  </div>
-                </div>
-                <Link to="/contato" className="block w-full">
-                  <Button
-                    variant="outline"
-                    className="w-full hover:bg-primary hover:text-white transition-colors"
-                  >
-                    Entrar em contato
-                  </Button>
-                </Link>
               </CardContent>
             </Card>
           </div>

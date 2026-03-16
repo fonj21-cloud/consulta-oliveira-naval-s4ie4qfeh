@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/contexts/AuthContext'
 import logoImg from '@/assets/generatedimage_1773618667682-c64bd.png'
+import { ChatWidget } from './ChatWidget'
 
 const navItems = [
   { name: 'Início', path: '/' },
@@ -93,17 +94,22 @@ export default function Layout() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="cursor-pointer">
+                    <Link
+                      to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'}
+                      className="cursor-pointer"
+                    >
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       <span>Meu Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings" className="cursor-pointer">
-                      <SettingsIcon className="mr-2 h-4 w-4" />
-                      <span>Configurações</span>
-                    </Link>
-                  </DropdownMenuItem>
+                  {user.role === 'client' && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings" className="cursor-pointer">
+                        <SettingsIcon className="mr-2 h-4 w-4" />
+                        <span>Configurações</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
@@ -168,20 +174,22 @@ export default function Layout() {
                     {user ? (
                       <>
                         <div className="px-6 py-2 text-sm text-zinc-400 uppercase tracking-wider font-semibold">
-                          Área do Cliente
+                          Área Logada
                         </div>
                         <Link
-                          to="/dashboard"
+                          to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'}
                           className="px-6 py-4 text-lg font-medium transition-colors hover:bg-zinc-900 text-slate-200 flex items-center gap-3"
                         >
                           <LayoutDashboard className="h-5 w-5" /> Dashboard
                         </Link>
-                        <Link
-                          to="/settings"
-                          className="px-6 py-4 text-lg font-medium transition-colors hover:bg-zinc-900 text-slate-200 flex items-center gap-3"
-                        >
-                          <SettingsIcon className="h-5 w-5" /> Configurações
-                        </Link>
+                        {user.role === 'client' && (
+                          <Link
+                            to="/settings"
+                            className="px-6 py-4 text-lg font-medium transition-colors hover:bg-zinc-900 text-slate-200 flex items-center gap-3"
+                          >
+                            <SettingsIcon className="h-5 w-5" /> Configurações
+                          </Link>
+                        )}
                         <button
                           onClick={handleLogout}
                           className="px-6 py-4 text-lg font-medium transition-colors hover:bg-zinc-900 text-red-400 flex items-center gap-3 text-left w-full"
@@ -246,6 +254,9 @@ export default function Layout() {
                     Área do Cliente
                   </Link>
                 )}
+                <Link to="/admin/login" className="hover:text-blue-400 transition-colors">
+                  Acesso Restrito
+                </Link>
               </div>
             </div>
 
@@ -268,6 +279,7 @@ export default function Layout() {
           </div>
         </div>
       </footer>
+      <ChatWidget />
     </div>
   )
 }

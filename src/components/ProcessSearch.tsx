@@ -4,27 +4,13 @@ import { Search, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
+import { formatCNJ } from '@/lib/utils'
 
 export function ProcessSearch() {
   const [query, setQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { toast } = useToast()
-
-  const handleFormatCNJ = (value: string) => {
-    let v = value.replace(/\D/g, '')
-    if (v.length > 20) v = v.substring(0, 20)
-    if (v.length > 15) {
-      v = v.replace(/^(\d{7})(\d{2})(\d{4})(\d{1})(\d{2})(\d{4})$/, '$1-$2.$3.$4.$5.$6')
-    } else {
-      v = v.replace(/^(\d{7})(\d)/, '$1-$2')
-      v = v.replace(/-(\d{2})(\d)/, '-$1.$2')
-      v = v.replace(/\.(\d{4})(\d)/, '.$1.$2')
-      v = v.replace(/\.(\d)(\d)/, '.$1.$2')
-      v = v.replace(/\.(\d{2})(\d)/, '.$1.$2')
-    }
-    setQuery(v)
-  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,7 +28,6 @@ export function ProcessSearch() {
     if (!query) return
 
     setIsLoading(true)
-    // Simulate network delay
     setTimeout(() => {
       setIsLoading(false)
       navigate(`/processo/${encodeURIComponent(query)}`)
@@ -60,7 +45,7 @@ export function ProcessSearch() {
           type="text"
           placeholder="0000000-00.0000.0.00.0000"
           value={query}
-          onChange={(e) => handleFormatCNJ(e.target.value)}
+          onChange={(e) => setQuery(formatCNJ(e.target.value))}
           className="flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-6 text-lg font-sans bg-transparent"
         />
         <div className="pr-2">
