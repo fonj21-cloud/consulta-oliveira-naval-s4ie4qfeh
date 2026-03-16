@@ -9,6 +9,8 @@ import {
   LogOut,
   MessageCircle,
   BarChart,
+  Megaphone,
+  ClipboardCheck,
 } from 'lucide-react'
 import {
   SidebarProvider,
@@ -30,8 +32,10 @@ import logoImg from '@/assets/generatedimage_1773618667682-c64bd.png'
 
 const menuItems = [
   { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
+  { title: 'CRM / Leads', url: '/admin/crm', icon: Megaphone },
   { title: 'Clientes', url: '/admin/clients', icon: Users },
   { title: 'Processos', url: '/admin/processes', icon: Briefcase },
+  { title: 'Aprovações', url: '/admin/approvals', icon: ClipboardCheck },
   { title: 'Agenda/Prazos', url: '/admin/calendar', icon: Calendar },
   { title: 'Financeiro', url: '/admin/finance', icon: DollarSign },
   { title: 'Wiki Legal', url: '/admin/wiki', icon: BookOpen },

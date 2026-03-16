@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, DollarSign } from 'lucide-react'
+import { Plus, Search, DollarSign, QrCode } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -27,10 +27,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import useDataStore from '@/stores/useDataStore'
-import { FinancialEntry } from '@/lib/mock-data'
+import { useToast } from '@/hooks/use-toast'
 
 export default function AdminFinance() {
-  const { financialEntries, processes, clients, addFinancialEntry } = useDataStore()
+  const { financialEntries, processes, clients, addFinancialEntry, generatePix } = useDataStore()
+  const { toast } = useToast()
+
   const [search, setSearch] = useState('')
   const [isAddOpen, setIsAddOpen] = useState(false)
 
@@ -56,7 +58,16 @@ export default function AdminFinance() {
       setAmount('')
       setDescription('')
       setDueDate('')
+      toast({ title: 'Lançamento adicionado' })
     }
+  }
+
+  const handleGeneratePix = (id: string) => {
+    generatePix(id)
+    toast({
+      title: 'Pix Gerado',
+      description: 'Código Pix Copia e Cola disponibilizado para o cliente.',
+    })
   }
 
   const getStatusBadge = (status: string) => {
@@ -118,7 +129,8 @@ export default function AdminFinance() {
                 <TableHead>Processo / Cliente</TableHead>
                 <TableHead>Vencimento</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right pr-6">Valor</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
+                <TableHead className="text-right pr-6">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -146,9 +158,28 @@ export default function AdminFinance() {
                       {entry.dueDate.split('-').reverse().join('/')}
                     </TableCell>
                     <TableCell>{getStatusBadge(entry.status)}</TableCell>
-                    <TableCell className="text-right pr-6 font-semibold">
+                    <TableCell className="text-right font-semibold">
                       {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                         entry.amount,
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right pr-6">
+                      {entry.status !== 'Pago' && !entry.pixCode && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleGeneratePix(entry.id)}
+                        >
+                          <QrCode className="w-4 h-4 mr-1" /> Gerar Pix
+                        </Button>
+                      )}
+                      {entry.pixCode && entry.status !== 'Pago' && (
+                        <Badge
+                          variant="outline"
+                          className="border-emerald-200 text-emerald-700 bg-emerald-50 font-normal"
+                        >
+                          Pix Ativo
+                        </Badge>
                       )}
                     </TableCell>
                   </TableRow>

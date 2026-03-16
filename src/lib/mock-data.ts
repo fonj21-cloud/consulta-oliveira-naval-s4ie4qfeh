@@ -17,6 +17,12 @@ export interface ProcessEvent {
   zapsignDocumentToken?: string
   signatureUrl?: string
   signedFileUrl?: string
+
+  // Document Approval Workflow
+  approvalStatus?: 'draft' | 'pending_approval' | 'approved' | 'rejected'
+  createdBy?: string
+  approvedBy?: string
+  rejectionReason?: string
 }
 
 export interface Lawyer {
@@ -59,6 +65,7 @@ export interface FinancialEntry {
   dueDate: string
   status: 'Pendente' | 'Pago' | 'Atrasado'
   paidAt?: string
+  pixCode?: string
 }
 
 export interface WikiEntry {
@@ -67,6 +74,23 @@ export interface WikiEntry {
   category: 'Teses Jurídicas' | 'Modelos de Petições' | 'Notas Técnicas' | string
   content: string
   updatedAt: string
+}
+
+export interface LeadInteraction {
+  id: string
+  date: string
+  notes: string
+}
+
+export interface Lead {
+  id: string
+  name: string
+  email: string
+  phone: string
+  service: string
+  stage: 'New Contact' | 'Initial Meeting' | 'Proposal Sent' | 'Contracting' | 'Converted' | 'Lost'
+  interactions: LeadInteraction[]
+  createdAt: string
 }
 
 const today = new Date()
@@ -111,6 +135,9 @@ export const INITIAL_PROCESSES: ProcessDetails[] = [
         signatureStatus: 'pending',
         zapsignDocumentToken: 'mock-1234',
         signatureUrl: 'https://sandbox.zapsign.com.br/assinar/mock-1234',
+        approvalStatus: 'approved',
+        createdBy: 'Dra. Ana Oliveira',
+        approvedBy: 'Dr. Roberto Naval',
       },
       {
         id: 'e1',
@@ -141,6 +168,15 @@ export const INITIAL_PROCESSES: ProcessDetails[] = [
     },
     events: [
       {
+        id: 'e5',
+        date: '18/08/2023',
+        title: 'Petição de Acordo.pdf',
+        description: 'Minuta do acordo para revisão.',
+        type: 'documento',
+        approvalStatus: 'pending_approval',
+        createdBy: 'Assistente Jurídico',
+      },
+      {
         id: 'e4',
         date: '20/08/2023',
         title: 'Alvará Expedido',
@@ -166,13 +202,6 @@ export const INITIAL_DEADLINES: Deadline[] = [
     description: 'Prazo final para interpor recurso',
     date: addDays(today, 5),
   },
-  {
-    id: 'd3',
-    processId: 'p1',
-    title: 'Juntada de Documentos',
-    description: 'Juntar comprovantes de horas extras',
-    date: addDays(today, 12),
-  },
 ]
 
 export const INITIAL_FINANCE: FinancialEntry[] = [
@@ -193,6 +222,8 @@ export const INITIAL_FINANCE: FinancialEntry[] = [
     description: 'Custas processuais',
     dueDate: addDays(today, 10),
     status: 'Pendente',
+    pixCode:
+      '0002012636br.gov.bcb.pix0114+5521999999999520400005303999540412345802BR5913350.006009SAO PAULO62070503***63048A45',
   },
   {
     id: 'f3',
@@ -211,24 +242,33 @@ export const INITIAL_WIKI: WikiEntry[] = [
     id: 'w1',
     title: 'Reforma Trabalhista - Horas In itinere',
     category: 'Teses Jurídicas',
-    content:
-      'Fundamentação atualizada sobre horas in itinere após a reforma trabalhista. O entendimento atual dos tribunais...',
+    content: 'Fundamentação atualizada...',
     updatedAt: addDays(today, -30),
   },
+]
+
+export const INITIAL_LEADS: Lead[] = [
   {
-    id: 'w2',
-    title: 'Modelo Petição Inicial Acidente Trabalho',
-    category: 'Modelos de Petições',
-    content:
-      'EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DA VARA DO TRABALHO...\n\nQualificação do reclamante...',
-    updatedAt: addDays(today, -10),
+    id: 'l1',
+    name: 'Carlos Mendes',
+    email: 'carlos@empresa.com',
+    phone: '(21) 97777-7777',
+    service: 'Consultoria Preventiva',
+    stage: 'New Contact',
+    createdAt: addDays(today, -2),
+    interactions: [{ id: 'i1', date: addDays(today, -2), notes: 'Contato recebido pelo site.' }],
   },
   {
-    id: 'w3',
-    title: 'Contagem de Prazos PJe TRT1',
-    category: 'Notas Técnicas',
-    content:
-      'Atenção aos prazos no PJe do TRT1. Finais de semana e feriados requerem checagem do calendário oficial do tribunal.',
-    updatedAt: addDays(today, -2),
+    id: 'l2',
+    name: 'Fernanda Lima',
+    email: 'fernanda@lima.com',
+    phone: '(21) 96666-6666',
+    service: 'Ação Trabalhista (Reclamante)',
+    stage: 'Proposal Sent',
+    createdAt: addDays(today, -10),
+    interactions: [
+      { id: 'i2', date: addDays(today, -10), notes: 'Reunião inicial realizada.' },
+      { id: 'i3', date: addDays(today, -5), notes: 'Proposta de honorários enviada.' },
+    ],
   },
 ]

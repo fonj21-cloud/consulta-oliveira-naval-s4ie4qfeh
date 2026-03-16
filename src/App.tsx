@@ -27,6 +27,8 @@ import AdminAnalytics from './pages/admin/AdminAnalytics'
 import AdminCalendar from './pages/admin/AdminCalendar'
 import AdminFinance from './pages/admin/AdminFinance'
 import AdminWiki from './pages/admin/AdminWiki'
+import AdminCRM from './pages/admin/AdminCRM'
+import AdminApprovals from './pages/admin/AdminApprovals'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -55,8 +57,10 @@ const App = () => (
             <Route element={<AdminRoute />}>
               <Route element={<AdminLayout />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/crm" element={<AdminCRM />} />
                 <Route path="/admin/clients" element={<AdminClients />} />
                 <Route path="/admin/processes" element={<AdminProcesses />} />
+                <Route path="/admin/approvals" element={<AdminApprovals />} />
                 <Route path="/admin/calendar" element={<AdminCalendar />} />
                 <Route path="/admin/finance" element={<AdminFinance />} />
                 <Route path="/admin/wiki" element={<AdminWiki />} />

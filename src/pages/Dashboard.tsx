@@ -8,6 +8,9 @@ import {
   AlertCircle,
   PenTool,
   RefreshCw,
+  QrCode,
+  Copy,
+  Download,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -31,18 +34,19 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import useDataStore from '@/stores/useDataStore'
 import { useToast } from '@/hooks/use-toast'
-import { ProcessEvent } from '@/lib/mock-data'
+import { ProcessEvent, FinancialEntry } from '@/lib/mock-data'
 import { cn } from '@/lib/utils'
 
 type PendingDoc = ProcessEvent & { processNumber: string; processId: string }
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const { processes, financialEntries, signDocument, checkZapSignStatus } = useDataStore()
+  const { processes, financialEntries, signDocument, checkZapSignStatus, payPix } = useDataStore()
   const { toast } = useToast()
 
   const [signDoc, setSignDoc] = useState<PendingDoc | null>(null)
   const [isChecking, setIsChecking] = useState<string | null>(null)
+  const [pixEntry, setPixEntry] = useState<FinancialEntry | null>(null)
 
   const userProcesses = processes.filter((p) => p.clientId === user?.id)
   const userFinance = financialEntries.filter((f) =>
@@ -86,6 +90,28 @@ export default function Dashboard() {
     } finally {
       setIsChecking(null)
     }
+  }
+
+  const copyPix = () => {
+    if (pixEntry?.pixCode) {
+      navigator.clipboard.writeText(pixEntry.pixCode)
+      toast({ title: 'Código Pix copiado!' })
+    }
+  }
+
+  const simulatePayment = () => {
+    if (pixEntry) {
+      payPix(pixEntry.id)
+      toast({
+        title: 'Pagamento Confirmado',
+        description: 'O sistema reconheceu o pagamento do Pix.',
+      })
+      setPixEntry(null)
+    }
+  }
+
+  const downloadReceipt = () => {
+    toast({ title: 'Recibo gerado com sucesso.', description: 'O download iniciará em instantes.' })
   }
 
   return (
@@ -233,7 +259,7 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="financeiro" className="outline-none">
-            <Card className="border-0 shadow-sm">
+            <Card className="border-0 shadow-sm overflow-hidden">
               <CardContent className="p-0">
                 <Table>
                   <TableHeader className="bg-muted/30">
@@ -241,13 +267,14 @@ export default function Dashboard() {
                       <TableHead className="pl-6 h-14">Descrição</TableHead>
                       <TableHead>Vencimento</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right pr-6">Valor</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead className="text-right pr-6">Ação</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {userFinance.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                           Nenhum registro financeiro encontrado.
                         </TableCell>
                       </TableRow>
@@ -278,11 +305,32 @@ export default function Dashboard() {
                               </Badge>
                             )}
                           </TableCell>
-                          <TableCell className="text-right pr-6 font-semibold">
+                          <TableCell className="text-right font-semibold">
                             {Intl.NumberFormat('pt-BR', {
                               style: 'currency',
                               currency: 'BRL',
                             }).format(f.amount)}
+                          </TableCell>
+                          <TableCell className="text-right pr-6">
+                            {f.status !== 'Pago' && f.pixCode && (
+                              <Button
+                                size="sm"
+                                onClick={() => setPixEntry(f)}
+                                className="gap-2 bg-[#00b4d8] hover:bg-[#0096c7] text-white"
+                              >
+                                <QrCode className="w-4 h-4" /> Pagar com Pix
+                              </Button>
+                            )}
+                            {f.status === 'Pago' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={downloadReceipt}
+                                className="gap-2"
+                              >
+                                <Download className="w-4 h-4" /> Recibo
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))
@@ -295,7 +343,6 @@ export default function Dashboard() {
         </Tabs>
       </div>
 
-      {/* Legacy signing dialog for docs without zapsign token */}
       <Dialog open={!!signDoc} onOpenChange={(o) => !o && setSignDoc(null)}>
         <DialogContent>
           <DialogHeader>
@@ -318,6 +365,55 @@ export default function Dashboard() {
               <CheckCircle2 className="w-4 h-4" /> Confirmar
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!pixEntry} onOpenChange={(o) => !o && setPixEntry(null)}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl font-bold flex items-center justify-center gap-2">
+              <QrCode className="w-6 h-6 text-[#00b4d8]" /> Pagamento via Pix
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-6 space-y-6">
+            <div>
+              <p className="text-muted-foreground text-sm mb-1">{pixEntry?.description}</p>
+              <p className="text-3xl font-bold text-primary">
+                {pixEntry &&
+                  Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    pixEntry.amount,
+                  )}
+              </p>
+            </div>
+
+            <div className="mx-auto w-48 h-48 bg-white p-2 border-2 rounded-xl flex items-center justify-center">
+              <img
+                src={`https://img.usecurling.com/i?q=qrcode&shape=lineal-color&color=black`}
+                alt="QR Code Pix"
+                className="w-full h-full opacity-80"
+              />
+            </div>
+
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Ou copie o código abaixo:</p>
+              <div className="flex items-center gap-2 bg-muted p-2 rounded-md border">
+                <code className="text-xs truncate flex-1 text-left">{pixEntry?.pixCode}</code>
+                <Button size="icon" variant="ghost" onClick={copyPix} className="h-8 w-8 shrink-0">
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Button
+                variant="outline"
+                className="w-full text-xs text-muted-foreground"
+                onClick={simulatePayment}
+              >
+                [Mock] Simular Confirmação de Pagamento
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

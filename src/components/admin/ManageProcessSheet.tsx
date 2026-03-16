@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FileText, Plus, CheckCircle, RefreshCw } from 'lucide-react'
+import { FileText, Plus, CheckCircle, RefreshCw, Lock } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { ProcessDetails, ProcessEvent } from '@/lib/mock-data'
 import useDataStore from '@/stores/useDataStore'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
@@ -42,6 +43,7 @@ export function ManageProcessSheet({
     sendDocumentForSignature,
     checkZapSignStatus,
   } = useDataStore()
+  const { user } = useAuth()
   const { toast } = useToast()
 
   const [status, setStatus] = useState<ProcessDetails['status']>(process?.status || 'Ativo')
@@ -80,13 +82,23 @@ export function ManageProcessSheet({
     addProcessEvent(process.id, {
       date: new Date().toLocaleDateString('pt-BR'),
       title: file.name,
-      description: 'Documento inserido pelo administrador.',
+      description: 'Documento inserido aguardando aprovação.',
       type: 'documento',
+      approvalStatus: 'pending_approval',
+      createdBy: user?.name || 'Equipe',
     })
-    toast({ title: 'Documento anexado com sucesso' })
+    toast({ title: 'Documento enviado para aprovação' })
   }
 
   const handleOpenZapSign = (doc: ProcessEvent) => {
+    if (doc.approvalStatus && doc.approvalStatus !== 'approved') {
+      toast({
+        title: 'Documento não aprovado',
+        description: 'Apenas documentos aprovados podem ser enviados para assinatura.',
+        variant: 'destructive',
+      })
+      return
+    }
     setZapDoc(doc)
     const client = clients.find((c) => c.id === process.clientId)
     if (client) {
@@ -213,21 +225,57 @@ export function ManageProcessSheet({
                     docs.map((doc) => (
                       <div
                         key={doc.id}
-                        className="flex items-center justify-between p-3 border rounded-lg bg-white"
+                        className="flex flex-col p-3 border rounded-lg bg-white gap-2"
                       >
-                        <div className="flex items-center gap-3 overflow-hidden pr-2">
-                          <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm font-medium truncate max-w-[140px]">
-                            {doc.title}
-                          </span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 overflow-hidden pr-2">
+                            <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <span className="text-sm font-medium truncate max-w-[140px]">
+                              {doc.title}
+                            </span>
+                          </div>
+
+                          {doc.approvalStatus && (
+                            <Badge
+                              className={
+                                doc.approvalStatus === 'approved'
+                                  ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0 shadow-none'
+                                  : doc.approvalStatus === 'rejected'
+                                    ? 'bg-red-100 text-red-700 hover:bg-red-100 border-0 shadow-none'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200 shadow-none'
+                              }
+                            >
+                              {doc.approvalStatus === 'approved'
+                                ? 'Aprovado'
+                                : doc.approvalStatus === 'rejected'
+                                  ? 'Reprovado'
+                                  : 'Em Revisão'}
+                            </Badge>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+
+                        {doc.approvalStatus === 'rejected' && doc.rejectionReason && (
+                          <div className="text-xs text-red-600 bg-red-50 p-2 rounded mt-1">
+                            <strong>Motivo:</strong> {doc.rejectionReason}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-end gap-2 shrink-0 mt-2 border-t pt-2">
                           {!doc.zapsignDocumentToken ? (
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => handleOpenZapSign(doc)}
+                              disabled={
+                                doc.approvalStatus === 'pending_approval' ||
+                                doc.approvalStatus === 'rejected'
+                              }
+                              title={doc.approvalStatus !== 'approved' ? 'Requer aprovação' : ''}
                             >
+                              {(doc.approvalStatus === 'pending_approval' ||
+                                doc.approvalStatus === 'rejected') && (
+                                <Lock className="w-3 h-3 mr-1" />
+                              )}
                               ZapSign
                             </Button>
                           ) : (
