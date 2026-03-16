@@ -1,9 +1,10 @@
-import { Users, Briefcase, Clock, Activity } from 'lucide-react'
+import { Users, Briefcase, Clock, Activity, AlertTriangle, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import useDataStore from '@/stores/useDataStore'
 
 export default function AdminDashboard() {
-  const { clients, processes } = useDataStore()
+  const { clients, processes, deadlines, financialEntries } = useDataStore()
 
   const activeProcesses = processes.filter((p) => p.status === 'Ativo').length
   const pendingProcesses = processes.filter((p) => p.status === 'Aguardando Prazo').length
@@ -39,14 +40,35 @@ export default function AdminDashboard() {
     },
   ]
 
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const criticalDeadlines = deadlines
+    .filter((d) => {
+      const diff = Math.ceil((new Date(d.date).getTime() - today.getTime()) / 86400000)
+      return diff >= 0 && diff <= 7
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  const currentMonth = today.getMonth()
+  let pendingAmount = 0
+  let paidAmount = 0
+  financialEntries.forEach((f) => {
+    const d = new Date(f.dueDate)
+    if (d.getMonth() === currentMonth) {
+      if (f.status === 'Pago') paidAmount += f.amount
+      else pendingAmount += f.amount
+    }
+  })
+
   return (
-    <div className="max-w-6xl mx-auto animate-fade-in">
-      <div className="mb-8">
+    <div className="max-w-6xl mx-auto animate-fade-in space-y-8">
+      <div>
         <h1 className="font-serif text-3xl font-bold text-primary mb-2">Visão Geral</h1>
-        <p className="text-muted-foreground">Resumo das atividades do escritório.</p>
+        <p className="text-muted-foreground">Resumo das atividades e pendências do escritório.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
           <Card key={i} className="border-0 shadow-sm">
             <CardContent className="p-6 flex items-center gap-4">
@@ -64,49 +86,67 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <CardTitle className="font-serif text-xl">Atividades Recentes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {processes
-              .flatMap((p) =>
-                p.events.map((e) => ({
-                  ...e,
-                  processNumber: p.number,
-                  clientName: clients.find((c) => c.id === p.clientId)?.name,
-                })),
-              )
-              .sort(
-                (a, b) =>
-                  new Date(b.date.split('/').reverse().join('-')).getTime() -
-                  new Date(a.date.split('/').reverse().join('-')).getTime(),
-              )
-              .slice(0, 5)
-              .map((event, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 border border-transparent hover:border-border transition-colors"
-                >
-                  <div className="w-2 h-2 rounded-full bg-secondary mt-2 shrink-0" />
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start mb-1">
-                      <p className="font-semibold text-primary text-sm">{event.title}</p>
-                      <span className="text-xs text-muted-foreground bg-white px-2 py-0.5 rounded border">
-                        {event.date}
-                      </span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-0 shadow-sm border-t-4 border-t-red-500">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <CardTitle className="font-serif text-xl flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-500" /> Prazos Críticos (7 dias)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {criticalDeadlines.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum prazo crítico no momento.</p>
+            ) : (
+              <div className="space-y-3">
+                {criticalDeadlines.map((d) => (
+                  <div
+                    key={d.id}
+                    className="flex justify-between items-start p-3 bg-red-50 rounded-lg border border-red-100"
+                  >
+                    <div>
+                      <p className="font-semibold text-red-900 text-sm">{d.title}</p>
+                      <p className="text-xs text-red-700/80 mt-1 line-clamp-1">{d.description}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Processo: {event.processNumber} - Cliente: {event.clientName}
-                    </p>
-                    <p className="text-sm text-foreground/80 line-clamp-1">{event.description}</p>
+                    <Badge variant="destructive" className="shrink-0">
+                      {d.date.split('-').reverse().join('/')}
+                    </Badge>
                   </div>
-                </div>
-              ))}
-          </div>
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm border-t-4 border-t-emerald-500">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <CardTitle className="font-serif text-xl flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-emerald-500" /> Resumo Financeiro (Mês)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+              <div>
+                <p className="text-sm font-medium text-emerald-800">Recebido</p>
+                <h3 className="text-2xl font-bold text-emerald-700">
+                  {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    paidAmount,
+                  )}
+                </h3>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-amber-50 rounded-lg border border-amber-100">
+              <div>
+                <p className="text-sm font-medium text-amber-800">Pendente / Atrasado</p>
+                <h3 className="text-2xl font-bold text-amber-700">
+                  {Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    pendingAmount,
+                  )}
+                </h3>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

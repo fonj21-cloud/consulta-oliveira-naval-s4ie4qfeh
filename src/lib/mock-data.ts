@@ -39,6 +39,40 @@ export interface ProcessDetails {
   syncStatus?: 'Up to date' | 'Syncing' | 'Error'
 }
 
+export interface Deadline {
+  id: string
+  processId: string
+  title: string
+  description: string
+  date: string
+}
+
+export interface FinancialEntry {
+  id: string
+  processId: string
+  type: 'Honorários' | 'Custas'
+  amount: number
+  description: string
+  dueDate: string
+  status: 'Pendente' | 'Pago' | 'Atrasado'
+  paidAt?: string
+}
+
+export interface WikiEntry {
+  id: string
+  title: string
+  category: 'Teses Jurídicas' | 'Modelos de Petições' | 'Notas Técnicas' | string
+  content: string
+  updatedAt: string
+}
+
+const today = new Date()
+const addDays = (d: Date, days: number) => {
+  const nd = new Date(d)
+  nd.setDate(nd.getDate() + days)
+  return nd.toISOString().split('T')[0]
+}
+
 export const INITIAL_CLIENTS: Client[] = [
   { id: '1', name: 'João Carlos Silva', email: 'joao@email.com', phone: '(21) 99999-9999' },
   { id: '2', name: 'Maria Eduarda Costa', email: 'maria@email.com', phone: '(21) 98888-8888' },
@@ -80,13 +114,6 @@ export const INITIAL_PROCESSES: ProcessDetails[] = [
         description: 'Foi marcada a data para a primeira tentativa de acordo entre as partes.',
         type: 'audiencia',
       },
-      {
-        id: 'e2',
-        date: '15/03/2023',
-        title: 'Petição Inicial.pdf',
-        description: 'Petição inicial anexada ao processo.',
-        type: 'documento',
-      },
     ],
   },
   {
@@ -116,5 +143,87 @@ export const INITIAL_PROCESSES: ProcessDetails[] = [
         type: 'conclusao',
       },
     ],
+  },
+]
+
+export const INITIAL_DEADLINES: Deadline[] = [
+  {
+    id: 'd1',
+    processId: 'p1',
+    title: 'Contestação',
+    description: 'Apresentar contestação da inicial',
+    date: addDays(today, 1),
+  },
+  {
+    id: 'd2',
+    processId: 'p2',
+    title: 'Recurso Ordinário',
+    description: 'Prazo final para interpor recurso',
+    date: addDays(today, 5),
+  },
+  {
+    id: 'd3',
+    processId: 'p1',
+    title: 'Juntada de Documentos',
+    description: 'Juntar comprovantes de horas extras',
+    date: addDays(today, 12),
+  },
+]
+
+export const INITIAL_FINANCE: FinancialEntry[] = [
+  {
+    id: 'f1',
+    processId: 'p1',
+    type: 'Honorários',
+    amount: 5000,
+    description: 'Sinal inicial',
+    dueDate: addDays(today, -5),
+    status: 'Atrasado',
+  },
+  {
+    id: 'f2',
+    processId: 'p1',
+    type: 'Custas',
+    amount: 350,
+    description: 'Custas processuais',
+    dueDate: addDays(today, 10),
+    status: 'Pendente',
+  },
+  {
+    id: 'f3',
+    processId: 'p2',
+    type: 'Honorários',
+    amount: 1500,
+    description: 'Parcela final',
+    dueDate: addDays(today, -15),
+    status: 'Pago',
+    paidAt: addDays(today, -15),
+  },
+]
+
+export const INITIAL_WIKI: WikiEntry[] = [
+  {
+    id: 'w1',
+    title: 'Reforma Trabalhista - Horas In itinere',
+    category: 'Teses Jurídicas',
+    content:
+      'Fundamentação atualizada sobre horas in itinere após a reforma trabalhista. O entendimento atual dos tribunais...',
+    updatedAt: addDays(today, -30),
+  },
+  {
+    id: 'w2',
+    title: 'Modelo Petição Inicial Acidente Trabalho',
+    category: 'Modelos de Petições',
+    content:
+      'EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DA VARA DO TRABALHO...\n\nQualificação do reclamante...',
+    updatedAt: addDays(today, -10),
+  },
+  {
+    id: 'w3',
+    title: 'Contagem de Prazos PJe TRT1',
+    category: 'Notas Técnicas',
+    content:
+      'Atenção aos prazos no PJe do TRT1. Finais de semana e feriados requerem checagem do calendário oficial do tribunal.',
+    updatedAt: addDays(today, -2),
   },
 ]

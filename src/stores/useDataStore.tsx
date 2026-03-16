@@ -3,14 +3,23 @@ import {
   Client,
   ProcessDetails,
   ProcessEvent,
+  Deadline,
+  FinancialEntry,
+  WikiEntry,
   INITIAL_CLIENTS,
   INITIAL_PROCESSES,
+  INITIAL_DEADLINES,
+  INITIAL_FINANCE,
+  INITIAL_WIKI,
 } from '@/lib/mock-data'
 import { useToast } from '@/hooks/use-toast'
 
 interface DataContextType {
   clients: Client[]
   processes: ProcessDetails[]
+  deadlines: Deadline[]
+  financialEntries: FinancialEntry[]
+  wikiEntries: WikiEntry[]
   whatsappConnected: boolean
   setWhatsappConnected: (v: boolean) => void
   addClient: (c: Client) => void
@@ -19,6 +28,8 @@ interface DataContextType {
   addProcessEvent: (processId: string, event: Omit<ProcessEvent, 'id'>) => void
   syncProcessWithTRT: (id: string) => void
   signDocument: (processId: string, eventId: string) => void
+  addFinancialEntry: (f: Omit<FinancialEntry, 'id'>) => void
+  addWikiEntry: (w: Omit<WikiEntry, 'id' | 'updatedAt'>) => void
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -26,26 +37,24 @@ const DataContext = createContext<DataContextType | undefined>(undefined)
 export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS)
   const [processes, setProcesses] = useState<ProcessDetails[]>(INITIAL_PROCESSES)
+  const [deadlines, setDeadlines] = useState<Deadline[]>(INITIAL_DEADLINES)
+  const [financialEntries, setFinancialEntries] = useState<FinancialEntry[]>(INITIAL_FINANCE)
+  const [wikiEntries, setWikiEntries] = useState<WikiEntry[]>(INITIAL_WIKI)
   const [whatsappConnected, setWhatsappConnected] = useState(true)
   const { toast } = useToast()
 
   const triggerWhatsApp = (clientName: string, type: string) => {
     if (whatsappConnected) {
       toast({
-        title: 'Mensagem Automática (WhatsApp/E-mail API)',
-        description: `Notificação de "${type}" enviada com sucesso para ${clientName}.`,
+        title: 'Notificação Automática',
+        description: `Mensagem de "${type}" enviada para ${clientName}.`,
         className: 'bg-[#25D366] text-white border-none',
       })
     }
   }
 
-  const addClient = (c: Client) => {
-    setClients((prev) => [...prev, c])
-  }
-
-  const addProcess = (p: ProcessDetails) => {
-    setProcesses((prev) => [...prev, p])
-  }
+  const addClient = (c: Client) => setClients((prev) => [...prev, c])
+  const addProcess = (p: ProcessDetails) => setProcesses((prev) => [...prev, p])
 
   const updateProcessStatus = (id: string, status: ProcessDetails['status']) => {
     setProcesses((prev) =>
@@ -78,33 +87,27 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const syncProcessWithTRT = (id: string) => {
-    setProcesses((prev) =>
-      prev.map((p) => {
-        if (p.id === id) return { ...p, syncStatus: 'Syncing' }
-        return p
-      }),
-    )
-
+    setProcesses((prev) => prev.map((p) => (p.id === id ? { ...p, syncStatus: 'Syncing' } : p)))
     setTimeout(() => {
       setProcesses((prev) =>
         prev.map((p) => {
           if (p.id === id) {
             const client = clients.find((c) => c.id === p.clientId)
             if (client) triggerWhatsApp(client.name, `Atualização TRT`)
-
-            const newEvent: ProcessEvent = {
-              id: Math.random().toString(),
-              date: new Date().toLocaleDateString('pt-BR'),
-              title: 'Movimentação via PJe TRT',
-              description: 'Andamento capturado automaticamente pelo serviço de integração.',
-              type: 'movimentacao',
-            }
-
             return {
               ...p,
               syncStatus: 'Up to date',
               lastSyncDate: new Date().toLocaleString('pt-BR'),
-              events: [newEvent, ...p.events],
+              events: [
+                {
+                  id: Math.random().toString(),
+                  date: new Date().toLocaleDateString('pt-BR'),
+                  title: 'Movimentação PJe TRT',
+                  description: 'Andamento capturado automaticamente.',
+                  type: 'movimentacao',
+                },
+                ...p.events,
+              ],
             }
           }
           return p
@@ -115,25 +118,34 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const signDocument = (processId: string, eventId: string) => {
     setProcesses((prev) =>
-      prev.map((p) => {
-        if (p.id === processId) {
-          return {
-            ...p,
-            events: p.events.map((e) => {
-              if (e.id === eventId) {
-                return {
-                  ...e,
-                  signatureStatus: 'signed',
-                  signedAt: new Date().toLocaleString('pt-BR'),
-                }
-              }
-              return e
-            }),
-          }
-        }
-        return p
-      }),
+      prev.map((p) =>
+        p.id === processId
+          ? {
+              ...p,
+              events: p.events.map((e) =>
+                e.id === eventId
+                  ? {
+                      ...e,
+                      signatureStatus: 'signed',
+                      signedAt: new Date().toLocaleString('pt-BR'),
+                    }
+                  : e,
+              ),
+            }
+          : p,
+      ),
     )
+  }
+
+  const addFinancialEntry = (f: Omit<FinancialEntry, 'id'>) => {
+    setFinancialEntries((prev) => [...prev, { ...f, id: Math.random().toString() }])
+  }
+
+  const addWikiEntry = (w: Omit<WikiEntry, 'id' | 'updatedAt'>) => {
+    setWikiEntries((prev) => [
+      ...prev,
+      { ...w, id: Math.random().toString(), updatedAt: new Date().toISOString().split('T')[0] },
+    ])
   }
 
   return (
@@ -141,6 +153,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       value={{
         clients,
         processes,
+        deadlines,
+        financialEntries,
+        wikiEntries,
         whatsappConnected,
         setWhatsappConnected,
         addClient,
@@ -149,6 +164,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         addProcessEvent,
         syncProcessWithTRT,
         signDocument,
+        addFinancialEntry,
+        addWikiEntry,
       }}
     >
       {children}

@@ -24,6 +24,9 @@ import AdminClients from './pages/admin/AdminClients'
 import AdminProcesses from './pages/admin/AdminProcesses'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
+import AdminCalendar from './pages/admin/AdminCalendar'
+import AdminFinance from './pages/admin/AdminFinance'
+import AdminWiki from './pages/admin/AdminWiki'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -33,7 +36,6 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
-            {/* Public and Client Routes */}
             <Route element={<Layout />}>
               <Route path="/" element={<Index />} />
               <Route path="/processo/:id" element={<ProcessDetail />} />
@@ -45,11 +47,9 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
-
               <Route path="*" element={<NotFound />} />
             </Route>
 
-            {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
 
             <Route element={<AdminRoute />}>
@@ -57,6 +57,9 @@ const App = () => (
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/clients" element={<AdminClients />} />
                 <Route path="/admin/processes" element={<AdminProcesses />} />
+                <Route path="/admin/calendar" element={<AdminCalendar />} />
+                <Route path="/admin/finance" element={<AdminFinance />} />
+                <Route path="/admin/wiki" element={<AdminWiki />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
               </Route>
