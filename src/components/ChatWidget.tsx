@@ -14,6 +14,12 @@ export function ChatWidget() {
   ])
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [messages, isOpen])
+
   // Only show to authenticated clients
   if (!user || user.role !== 'client') return null
 
@@ -34,12 +40,6 @@ export function ChatWidget() {
       ])
     }, 1500)
   }
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages, isOpen])
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up">

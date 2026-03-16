@@ -27683,6 +27683,9 @@ function ChatWidget() {
 		sender: "support"
 	}]);
 	const scrollRef = (0, import_react.useRef)(null);
+	(0, import_react.useEffect)(() => {
+		if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+	}, [messages, isOpen]);
 	if (!user || user.role !== "client") return null;
 	const handleSend = () => {
 		if (!input.trim()) return;
@@ -27699,9 +27702,6 @@ function ChatWidget() {
 			}]);
 		}, 1500);
 	};
-	(0, import_react.useEffect)(() => {
-		if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-	}, [messages, isOpen]);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		"data-uid": "src/components/ChatWidget.tsx:45:5",
 		"data-prohibitions": "[editContent]",
@@ -34564,4 +34564,4 @@ var App = () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BrowserRouter, {
 }));
 //#endregion
 
-//# sourceMappingURL=index-lBWKNjHR.js.map
+//# sourceMappingURL=index-DjXO2YpV.js.map
