@@ -234,7 +234,7 @@ export default function Layout() {
               </Link>
               <p className="text-sm text-center md:text-left max-w-sm text-zinc-400">
                 Especialistas em Direito do Trabalho, defendendo seus direitos com excelência,
-                transparência e dedicação na Justiça do Trabalho do Rio de Janeiro.
+                transparência e dedicação com atuação em todo o país.
               </p>
             </div>
 
